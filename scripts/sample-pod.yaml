@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pd-test-pod
+spec:
+  containers:
+  - name: cloud-sdk
+    image: google/cloud-sdk:slim
+    args: ["sleep","3600"]
+    volumeMounts:
+    - mountPath: /volume
+      name: mypvc
+  volumes:
+  - name: mypvc
+    persistentVolumeClaim:
+      claimName: pvc-demo
