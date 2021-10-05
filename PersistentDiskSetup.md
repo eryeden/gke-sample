@@ -1,6 +1,16 @@
-# GKE-test
+# Persistent disk setup
+
+
+## コンテンツ
+1. Persistent volumeにデータをGCSからダウンロードして、ダウンロード用のPodを消す。
+2. データをすでにダウンロードしてあるPersistent volumeを別Podからマウントする。
+3. 別Pod内に入りPersistent volumeにデータが入っているか確認する。
+
+基本的にやること: https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/readonlymany-disks
+
 
 ## 事前準備
+Localでgcloudを使えるように事前設定する。kubectlコマンドも利用できるように設定する。
 ``` bash
 # setting gcloud
 gcloud init
@@ -9,33 +19,6 @@ gcloud init
 gcloud components update
 gcloud components update kubectl
 ```
-
-## Create simple cluster
-```bash
-gcloud container clusters create hello-cluster --num-nodes=1 --zone=us-east1-b
-```
-`--zone`オプションがないと実行できなかった。
-
-```bash
-gcloud container clusters get-credentials hello-cluster --zone=us-east1-b
-```
-これを実行することで、Localの`kubectl`コマンドがGKEのクラスタに接続される。
-
-
-## Region, Zone
-ひとまず、`us-east1-b`で作成。
-
-
-## Tips
-- GKEの自動アップデートをしない: クラスター作成時に`--no-enable-autoupgrade`をつける。
-
-## やりたいこと
-1. Persistent volumeにデータをGCSからダウンロードして、ダウンロード用のPodを消す。
-2. データをすでにダウンロードしてあるPersistent volumeを別Podからマウントする。
-3. 別Pod無いにSSHして、Persistent volumeにデータが入っているか確認する。
-
-基本てきにやることは以下ページに従ってみる。
-https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/readonlymany-disks
 
 ## 事前準備
 なにかしらのクラスタをGKE上に作成する必要がある。
@@ -56,7 +39,11 @@ gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
 
 参考: https://sleepless-se.net/2018/12/11/gke-kubernetes/
 
-## Persistent volumeの自動準備
+### Tips
+GKEの自動アップデートの自動アップデートがかかるとkubectlなど制御ができなくなる。クラスター作成時に`--no-enable-autoupgrade`をつける。
+
+
+## 1. Persistent volumeの自動準備
 `PersistentVolumeClaims`をk8sで作成することで、Persistent volumeを自動的に作成することができる。
 
 - `PersistentVolumeClaims`
@@ -144,7 +131,7 @@ spec:
 kubectl apply -f pvc-demo.yaml
 ```
 
-## Persistent volumeをPodからマウントする
+## 2. Persistent volumeをPodからマウントする
 
 sample-pod.yaml
 ```yaml
@@ -172,7 +159,7 @@ spec:
 kubectl apply -f sample-pod.yaml
 ```
 
-## GCSからのダウンロード
+## 3. GCSからのダウンロード
 作成したPod内には以下のコマンドで入れる。Local環境でも問題なく入ることができた。
 ```bash
 kubectl exec -it pd-test-pod -- /bin/bash
@@ -200,7 +187,7 @@ cd /volume
 gsutil cp gs://<bucket_name>/kitten.png .
 ```
 
-## Persistent volume準備用Podの削除
+## 4. Persistent volume準備用Podの削除
 Podを削除するには以下のコマンドを実行する。
 ```bash
 kubectl delete pod pd-test-pod
@@ -214,7 +201,7 @@ pvc-e0cc4898-6a44-46a8-b4a9-14829a0db1d7   30Gi       RWO            Retain     
 
 ```
 
-## 作成したPersistent volume参照する`ReadOnlyMany`のPersistent Volume/Persistent Volume Claimsを作成
+## 5. 作成したPersistent volume参照する`ReadOnlyMany`のPersistent Volume/Persistent Volume Claimsを作成
 一度作成したPersistent volumeのアクセスモードを`ReadOnlyMany`に変更できない。
 そこで、前ステップまでで作成したPersistentVolumeを参照するPersistentVolume作成、そのときのアクセスモードを`ReadOnlyMany`として設定する。
 [(参照)](https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/readonlymany-disks#csi-driver)
@@ -272,7 +259,7 @@ spec:
 kubectl apply -f read_only_pod.yaml
 ```
 
-## Persistent volume利用用Podの作成、PV内データの確認
+## 6. Persistent volume利用用Podの作成、PV内データの確認
 `ReadOnlyMany`のアクセスモードせ設定したPVCを利用するPodを作成する。
 
 read_only_pod.yaml
@@ -318,7 +305,7 @@ kitten.png  lost+found
 ```
 
 
-## クリーンアップ
+## 7. クリーンアップ
 
 1. 作成したPodを削除する
 ```bash
@@ -336,3 +323,4 @@ kubectl delete pv --all
 gcloud container clusters delete $CLUSTER_NAME --zone $ZONE --quiet
 ```
 `--quite`オプションをつけるとY/nのプロンプトがなくなる。
+
