@@ -10,6 +10,7 @@ numpy = "^1.21.2"
 pulumi-gcp = "^5.20.0"
 pulumi-kubernetes = "^3.7.3"
 google-cloud-storage = "^1.42.3"
+kubernetes = "^18.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
