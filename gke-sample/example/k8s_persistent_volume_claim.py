@@ -7,8 +7,12 @@ def main():
     storage_class_name = "pd-python-test2"
     access_mode = "ReadWriteOnce"
     storage_size_gibibyte = 30
-    status = create_persistent_volume(persistent_volume_name, storage_class_name, access_mode, storage_size_gibibyte)
+    status = create_persistent_volume_claim(persistent_volume_name, storage_class_name, access_mode,
+                                            storage_size_gibibyte)
     print(status)
+
+    # status = delete_persistent_volume_claim(persistent_volume_name)
+    # print(status)
 
 
 if __name__ == '__main__':
