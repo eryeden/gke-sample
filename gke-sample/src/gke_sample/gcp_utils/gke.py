@@ -3,6 +3,10 @@ from google.cloud import storage
 from typing import List
 from gke_sample.bash_util.utils import *
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def get_cluster_credentials(cluster_name: str, zone: str):
     command = [

@@ -1,5 +1,8 @@
 import subprocess
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def execute_command(command: List[str]) -> str:
